@@ -1,0 +1,47 @@
+from graphviz import Digraph
+
+def visualize_dfa():
+    print("----- DFA Visualization -----")
+
+    states = input("Enter states (comma separated): ").split(",")
+    alphabet = input("Enter alphabet (comma separated): ").split(",")
+
+    start = input("Enter start state: ")
+    final = input("Enter final states (comma separated): ").split(",")
+
+    transitions = {}
+
+    print("\nEnter transitions:")
+    for state in states:
+        for symbol in alphabet:
+            next_state = input(
+                f"δ({state},{symbol}) = "
+            )
+            transitions[(state, symbol)] = next_state
+
+    dot = Digraph("DFA", format="png")
+
+    dot.attr(rankdir="LR")
+
+    # Invisible start arrow
+    dot.node("start", shape="none", label="")
+
+    # States
+    for state in states:
+        if state in final:
+            dot.node(state, shape="doublecircle")
+        else:
+            dot.node(state, shape="circle")
+
+    # Start arrow
+    dot.edge("start", start)
+
+    # Transitions
+    for (state, symbol), next_state in transitions.items():
+        dot.edge(state, next_state, label=symbol)
+
+    dot.render("dfa_visualization", view=True)
+
+    print("\nDFA visualization saved as dfa_visualization.png")
+
+visualize_dfa()
