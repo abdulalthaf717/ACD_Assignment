@@ -1,0 +1,136 @@
+from graphviz import Digraph
+from collections import deque
+
+
+def nfa_to_dfa():
+    print("----- NFA to DFA Conversion -----")
+
+    states = input("Enter NFA states (comma separated): ").split(",")
+    alphabet = input("Enter alphabet (comma separated): ").split(",")
+
+    start = input("Enter NFA start state: ")
+    final = input("Enter NFA final states (comma separated): ").split(",")
+
+    transitions = {}
+
+    print("\nEnter NFA transitions.")
+    print("Use | between multiple states.")
+    print("Use - for no transition.\n")
+
+    for state in states:
+        for symbol in alphabet:
+
+            value = input(f"δ({state},{symbol}) = ")
+
+            if value == "-":
+                transitions[(state, symbol)] = set()
+            else:
+                transitions[(state, symbol)] = set(value.split("|"))
+
+    # -----------------------------
+    # SUBSET CONSTRUCTION
+    # -----------------------------
+
+    start_set = frozenset([start])
+
+    dfa_states = []
+    dfa_transitions = {}
+
+    queue = deque([start_set])
+    visited = {start_set}
+
+    while queue:
+
+        current = queue.popleft()
+        dfa_states.append(current)
+
+        for symbol in alphabet:
+
+            next_set = set()
+
+            for nfa_state in current:
+                next_set.update(
+                    transitions.get((nfa_state, symbol), set())
+                )
+
+            next_set = frozenset(next_set)
+
+            dfa_transitions[(current, symbol)] = next_set
+
+            if next_set not in visited:
+                visited.add(next_set)
+                queue.append(next_set)
+
+    # -----------------------------
+    # DISPLAY DFA
+    # -----------------------------
+
+    print("\n===== DFA STATES =====")
+
+    for i, state in enumerate(dfa_states):
+        print(f"D{i} = {{{','.join(sorted(state))}}}")
+
+    print("\n===== DFA TRANSITIONS =====")
+
+    for (state, symbol), destination in dfa_transitions.items():
+
+        source_name = "D" + str(dfa_states.index(state))
+        dest_name = "D" + str(dfa_states.index(destination))
+
+        print(
+            f"δ({source_name},{symbol}) = {dest_name}"
+        )
+
+    # -----------------------------
+    # FIND FINAL STATES
+    # -----------------------------
+
+    dfa_final = []
+
+    for i, state in enumerate(dfa_states):
+
+        if any(s in final for s in state):
+            dfa_final.append("D" + str(i))
+
+    print("\nDFA Final States:")
+    print(dfa_final)
+
+    # -----------------------------
+    # GRAPHVIZ VISUALIZATION
+    # -----------------------------
+
+    dot = Digraph("NFA_to_DFA", format="png")
+    dot.attr(rankdir="LR")
+
+    # Invisible start node
+    dot.node("start", shape="none", label="")
+
+    # Create DFA nodes
+    for i, state in enumerate(dfa_states):
+
+        name = "D" + str(i)
+
+        label = "{" + ",".join(sorted(state)) + "}"
+
+        if name in dfa_final:
+            dot.node(name, label=label, shape="doublecircle")
+        else:
+            dot.node(name, label=label, shape="circle")
+
+    # Start arrow
+    dot.edge("start", "D0")
+
+    # DFA transitions
+    for (state, symbol), destination in dfa_transitions.items():
+
+        source = "D" + str(dfa_states.index(state))
+        target = "D" + str(dfa_states.index(destination))
+
+        dot.edge(source, target, label=symbol)
+
+    dot.render("nfa_to_dfa", view=True)
+
+    print("\nVisualization saved as nfa_to_dfa.png")
+
+
+nfa_to_dfa()
