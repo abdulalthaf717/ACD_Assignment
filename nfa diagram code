@@ -1,0 +1,54 @@
+from graphviz import Digraph
+
+def visualize_nfa():
+    print("----- NFA Visualization -----")
+
+    states = input("Enter states (comma separated): ").split(",")
+    alphabet = input("Enter alphabet (comma separated): ").split(",")
+
+    start = input("Enter start state: ")
+    final = input("Enter final states (comma separated): ").split(",")
+
+    transitions = {}
+
+    print("\nEnter transitions.")
+    print("For multiple states, separate them using |")
+    print("For no transition, enter -")
+
+    for state in states:
+        for symbol in alphabet:
+            value = input(f"δ({state},{symbol}) = ")
+
+            if value == "-":
+                transitions[(state, symbol)] = []
+            else:
+                transitions[(state, symbol)] = value.split("|")
+
+    dot = Digraph("NFA", format="png")
+    dot.attr(rankdir="LR")
+
+    # Invisible start node
+    dot.node("start", shape="none", label="")
+
+    # States
+    for state in states:
+        if state in final:
+            dot.node(state, shape="doublecircle")
+        else:
+            dot.node(state, shape="circle")
+
+    # Start arrow
+    dot.edge("start", start)
+
+    # Transitions
+    for (state, symbol), destinations in transitions.items():
+
+        for destination in destinations:
+            dot.edge(state, destination, label=symbol)
+
+    dot.render("nfa_visualization", view=True)
+
+    print("\nNFA visualization saved as nfa_visualization.png")
+
+
+visualize_nfa()
